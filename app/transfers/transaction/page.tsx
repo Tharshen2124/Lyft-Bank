@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Sparkles, ArrowLeft, CheckCircle } from "lucide-react"
 
-// Mock RSM settings - in real app, this would come from the database
+// Default RSM settings fallback
 const DEFAULT_RSM_MIN = 5.00
 const DEFAULT_RSM_MAX = 50.00
 
@@ -17,6 +17,24 @@ export default function TransactionPage() {
   const [showNotification, setShowNotification] = useState(false)
   const [rsmSavings, setRsmSavings] = useState(0)
   const [transferSuccess, setTransferSuccess] = useState(false)
+  const [rsmMin, setRsmMin] = useState(DEFAULT_RSM_MIN)
+  const [rsmMax, setRsmMax] = useState(DEFAULT_RSM_MAX)
+
+  // Load RSM settings from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedSettings = localStorage.getItem("rsm_settings")
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings)
+          if (settings.minAmount) setRsmMin(settings.minAmount)
+          if (settings.maxAmount) setRsmMax(settings.maxAmount)
+        } catch (error) {
+          console.error("Error loading RSM settings:", error)
+        }
+      }
+    }
+  }, [])
 
   // Get user info from query params
   const userId = searchParams.get("userId")
@@ -24,10 +42,30 @@ export default function TransactionPage() {
   const userMobile = searchParams.get("mobile") || ""
   const userBank = searchParams.get("bank") || ""
 
-  // Calculate random RSM savings amount
+  // Calculate random RSM savings amount within the specified range
   const calculateRSMSavings = (min: number, max: number): number => {
-    const randomAmount = Math.random() * (max - min) + min
-    return Math.round(randomAmount * 100) / 100 // Round to 2 decimal places
+    // Ensure min and max are valid numbers
+    const validMin = Math.max(0, min || DEFAULT_RSM_MIN)
+    const validMax = Math.max(validMin, max || DEFAULT_RSM_MAX)
+    
+    // Ensure min <= max
+    const actualMin = Math.min(validMin, validMax)
+    const actualMax = Math.max(validMin, validMax)
+    
+    // Generate random amount within range [min, max]
+    // Math.random() gives [0, 1), so (max - min) * random gives [0, max - min)
+    // Adding min gives [min, max)
+    // To include max, we use (max - min + 0.01) to ensure we can reach max
+    const range = actualMax - actualMin
+    const randomAmount = actualMin + (Math.random() * range)
+    
+    // Round to 2 decimal places and clamp to ensure it's within bounds
+    let result = Math.round(randomAmount * 100) / 100
+    
+    // Ensure result is within [min, max] range (safety clamp)
+    result = Math.max(actualMin, Math.min(actualMax, result))
+    
+    return result
   }
 
   const saveNotificationToHistory = (rsmAmount: number, transferAmount: number, recipientName: string) => {
@@ -72,12 +110,40 @@ export default function TransactionPage() {
     // Simulate transaction processing
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    // Calculate RSM savings (random between min and max)
-    const savings = calculateRSMSavings(DEFAULT_RSM_MIN, DEFAULT_RSM_MAX)
-    setRsmSavings(savings)
+    // Calculate RSM savings (random between saved min and max, or defaults)
+    // Ensure values are valid before calculation
+    const validMin = rsmMin > 0 ? rsmMin : DEFAULT_RSM_MIN
+    const validMax = rsmMax >= validMin ? rsmMax : validMin + DEFAULT_RSM_MAX
+    
+    // Calculate savings - function ensures it's within [validMin, validMax] range
+    const savings = calculateRSMSavings(validMin, validMax)
+    
+    // Final validation: ensure savings is within the exact range
+    const finalSavings = Math.max(validMin, Math.min(validMax, savings))
+    
+    setRsmSavings(finalSavings)
+
+    // Save transaction to localStorage for balance calculation
+    if (typeof window !== "undefined") {
+      const transactions = JSON.parse(localStorage.getItem("lyft_transactions") || "[]")
+      const newTransaction = {
+        id: `txn-${Date.now()}`,
+        transferAmount: transferAmount,
+        rsmSavings: finalSavings, // Use validated savings amount (guaranteed within range)
+        recipient: userName,
+        timestamp: new Date().toISOString(),
+        rsmMin: validMin, // Store the range used for reference
+        rsmMax: validMax,
+      }
+      transactions.push(newTransaction)
+      localStorage.setItem("lyft_transactions", JSON.stringify(transactions))
+      
+      // Dispatch custom event to update accounts page in same tab
+      window.dispatchEvent(new Event("transactionComplete"))
+    }
 
     // Save notification to history
-    saveNotificationToHistory(savings, transferAmount, userName)
+    saveNotificationToHistory(finalSavings, transferAmount, userName)
 
     setIsProcessing(false)
     setTransferSuccess(true)
