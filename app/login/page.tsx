@@ -22,32 +22,35 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Right Side - Login Form with Clean Gradient Background */}
+      {/* Right Side - Login Form with Dark Grainy Gradient Background */}
       <div
         className="relative flex flex-col"
         style={{
           background:
-            "radial-gradient(ellipse at 100% 50%, #4169E1 0%, rgba(65, 105, 225, 0.3) 25%, transparent 50%), radial-gradient(ellipse at 0% 100%, #00CED1 0%, rgba(0, 206, 209, 0.2) 20%, transparent 40%), linear-gradient(135deg, #000814 0%, #001d3d 40%, #003566 70%, #001d3d 100%)",
+            "radial-gradient(ellipse at 100% 0%, #1e3a8a 0%, rgba(30, 58, 138, 0.4) 30%, transparent 60%), radial-gradient(ellipse at 0% 100%, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.05) 25%, transparent 50%), linear-gradient(135deg, #0a0e27 0%, #0f172a 30%, #1e293b 60%, #0a0e27 100%)",
         }}
       >
         <div
-          className="absolute inset-0 opacity-20"
+          className="absolute inset-0 opacity-30"
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.5' numOctaves='6' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`,
             backgroundRepeat: "repeat",
-            mixBlendMode: "soft-light",
+            mixBlendMode: "overlay",
           }}
         />
 
         {/* Back Button */}
         <div className="absolute top-8 left-10 z-10">
-          <Link href="/" className="inline-flex items-center gap-2 text-white hover:text-gray-200 font-medium text-sm">
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 text-white hover:text-gray-200 font-medium text-sm cursor-pointer transition-colors"
+          >
             <div className="w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
-              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
               </svg>
             </div>
-            Back
+            <span>Back</span>
           </Link>
         </div>
 
