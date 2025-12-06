@@ -1,17 +1,18 @@
 "use client"
 
 import Link from "next/link"
-import { Sparkles, X } from "lucide-react"
-import { useState } from "react"
+import { Sparkles, X, Coins } from "lucide-react"
+import { useState, useEffect } from "react"
 
 interface Notification {
   id: string
+  type?: string
   title: string
+  subtitle?: string
   date: string
   time: string
+  rsmAmount?: number
 }
-
-
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -71,8 +72,38 @@ export default function NotificationsPage() {
     },
   ])
 
+  // Load notifications from localStorage on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedNotifications = localStorage.getItem("lyft_notifications")
+      if (savedNotifications) {
+        try {
+          const parsed = JSON.parse(savedNotifications)
+          // Merge saved notifications with existing ones, prioritizing saved ones
+          setNotifications((prev) => {
+            // Combine and deduplicate
+            const combined = [...parsed, ...prev]
+            const unique = combined.filter((notif, index, self) => 
+              index === self.findIndex((n) => n.id === notif.id)
+            )
+            return unique
+          })
+        } catch (error) {
+          console.error("Error loading notifications:", error)
+        }
+      }
+    }
+  }, [])
+
   const deleteNotification = (id: string) => {
-    setNotifications(notifications.filter((notif) => notif.id !== id))
+    const updated = notifications.filter((notif) => notif.id !== id)
+    setNotifications(updated)
+    
+    // Update localStorage - only save RSM notifications
+    if (typeof window !== "undefined") {
+      const rsmNotifications = updated.filter(n => n.type === "rsm_savings")
+      localStorage.setItem("lyft_notifications", JSON.stringify(rsmNotifications))
+    }
   }
 
   return (
@@ -118,24 +149,43 @@ export default function NotificationsPage() {
           {notifications.map((notification) => (
             <div
               key={notification.id}
-              className="bg-white rounded-2xl border border-gray-200 p-6 flex items-center gap-4 hover:border-[#0000FF] hover:shadow-sm transition-all group"
+              className={`bg-white rounded-2xl border p-6 flex items-center gap-4 hover:shadow-sm transition-all group ${
+                notification.type === "rsm_savings" 
+                  ? "border-[#0000FF] bg-blue-50/30" 
+                  : "border-gray-200 hover:border-[#0000FF]"
+              }`}
             >
               {/* Icon */}
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg className="w-6 h-6 text-[#0000FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
-                  />
-                </svg>
+              <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                notification.type === "rsm_savings" 
+                  ? "bg-[#0000FF] bg-opacity-10" 
+                  : "bg-blue-100"
+              }`}>
+                {notification.type === "rsm_savings" ? (
+                  <Coins className="w-6 h-6 text-[#0000FF]" />
+                ) : (
+                  <svg className="w-6 h-6 text-[#0000FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                    />
+                  </svg>
+                )}
               </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-900">{notification.title}</h3>
-                <p className="text-sm text-gray-500">{notification.date}</p>
+                <h3 className={`font-semibold ${
+                  notification.type === "rsm_savings" ? "text-[#0000FF]" : "text-gray-900"
+                }`}>
+                  {notification.title}
+                </h3>
+                {notification.subtitle && (
+                  <p className="text-sm text-gray-600 mt-1">{notification.subtitle}</p>
+                )}
+                <p className="text-sm text-gray-500 mt-1">{notification.date}</p>
               </div>
 
               {/* Time and Delete */}
