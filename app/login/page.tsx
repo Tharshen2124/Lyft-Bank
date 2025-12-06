@@ -40,21 +40,35 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Back Button */}
-      <div className="p-6">
-        <Link href="/" className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium">
-          <ArrowLeft className="w-5 h-5" />
-          Back
-        </Link>
+    <div className="min-h-screen grid" style={{ gridTemplateColumns: "40fr 60fr" }}>
+      {/* Left Side - Image with Lyft Bank Branding */}
+      <div className="relative">
+        <img
+          src="/images/pexels-jack-sparrow-4199524.jpg"
+          alt="Payment terminal"
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute top-8 left-8">
+          <h1 className="text-4xl font-bold text-white tracking-tight">Lyft Bank</h1>
+        </div>
       </div>
 
-      {/* Centered Login Card */}
-      <div className="flex-1 flex items-center justify-center px-4">
-        <div className="w-full max-w-md bg-white rounded-3xl border-4 border-blue-600 p-12 text-center">
-          <h1 className="text-4xl font-bold text-blue-600 mb-4">Welcome!</h1>
-          <p className="text-gray-700 mb-8">Sign in to your account to continue.</p>
-
+      {/* Right Side - Login Form with Dark Grainy Gradient Background */}
+      <div
+        className="relative flex flex-col"
+        style={{
+          background:
+            "radial-gradient(ellipse at 100% 0%, #1e3a8a 0%, rgba(30, 58, 138, 0.4) 30%, transparent 60%), radial-gradient(ellipse at 0% 100%, rgba(20, 184, 166, 0.15) 0%, rgba(20, 184, 166, 0.05) 25%, transparent 50%), linear-gradient(135deg, #0a0e27 0%, #0f172a 30%, #1e293b 60%, #0a0e27 100%)",
+        }}
+      >
+        <div
+          className="absolute inset-0 opacity-30"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.4'/%3E%3C/svg%3E")`,
+            backgroundRepeat: "repeat",
+            mixBlendMode: "overlay",
+          }}
+        />
           {error && (
             <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
               {error}
