@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Sparkles, Loader2, CheckCircle, X } from "lucide-react"
+import { Sparkles, Loader2, CheckCircle, X, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
 interface AIRecommendation {
@@ -10,6 +10,14 @@ interface AIRecommendation {
   newMax: number
   reasoning: string
   headline: string
+}
+
+interface RSMTransaction {
+  id: string
+  amount: number
+  date: string
+  time: string
+  description: string
 }
 
 // Helper function to check if current date is during festival season
@@ -106,8 +114,10 @@ function analyzeUserContext(
   }
 }
 
-export default function SetupPage() {
+export default function RSMSettingsPage() {
   const router = useRouter()
+  const [balance, setBalance] = useState(3900.00)
+  const [transactions, setTransactions] = useState<RSMTransaction[]>([])
   const [minAmount, setMinAmount] = useState("20.00")
   const [maxAmount, setMaxAmount] = useState("20.00")
   const [rangeMin, setRangeMin] = useState(1)
@@ -116,6 +126,41 @@ export default function SetupPage() {
   const [aiRecommendation, setAiRecommendation] = useState<AIRecommendation | null>(null)
   const [showRecommendation, setShowRecommendation] = useState(false)
   const [hasAccepted, setHasAccepted] = useState(false)
+
+  // Load saved settings and generate mock transactions
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Load saved RSM settings
+      const savedSettings = localStorage.getItem("rsm_settings")
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings)
+          setMinAmount(settings.minAmount?.toFixed(2) || "20.00")
+          setMaxAmount(settings.maxAmount?.toFixed(2) || "20.00")
+          setRangeMin(settings.rangeMin || 1)
+          setRangeMax(settings.rangeMax || 5)
+        } catch (error) {
+          console.error("Error loading RSM settings:", error)
+        }
+      }
+
+      // Generate mock recent transactions
+      const mockTransactions: RSMTransaction[] = []
+      for (let i = 0; i < 5; i++) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        const amount = Math.random() * 50 + 10 // RM 10-60
+        mockTransactions.push({
+          id: `txn-${i}`,
+          amount: Math.round(amount * 100) / 100,
+          date: date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+          time: date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true }),
+          description: `RSM Savings Transfer`,
+        })
+      }
+      setTransactions(mockTransactions)
+    }
+  }, [])
 
   const handleSubmit = () => {
     // Don't allow new recommendations if one has already been accepted
@@ -206,7 +251,9 @@ export default function SetupPage() {
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#0000FF] text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <h1 className="text-xl font-bold">Lyft Bank</h1>
+          <Link href="/">
+            <h1 className="text-xl font-bold cursor-pointer hover:opacity-80">Lyft Bank</h1>
+          </Link>
           <Link href="/ai">
             <button className="relative px-6 py-2.5 rounded-full text-white font-medium text-sm flex items-center gap-2 overflow-hidden group">
               <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 p-[2px]">
@@ -220,15 +267,15 @@ export default function SetupPage() {
             </button>
           </Link>
           <nav className="flex items-center gap-8 ml-4">
-            <Link href="/accounts" className="hover:opacity-80 text-sm">
+            <Link href="/accounts" className="hover:opacity-80 text-sm font-medium">
               Accounts
             </Link>
-            <a href="#" className="hover:opacity-80 text-sm">
+            <Link href="/transfers" className="hover:opacity-80 text-sm">
               Transfers
-            </a>
-            <a href="#" className="hover:opacity-80 text-sm">
+            </Link>
+            <Link href="/notifications" className="hover:opacity-80 text-sm">
               Notifications
-            </a>
+            </Link>
           </nav>
         </div>
         <div className="bg-blue-700/50 text-white rounded-full w-10 h-10 flex items-center justify-center font-medium text-sm">
@@ -237,15 +284,61 @@ export default function SetupPage() {
       </header>
 
       <main className="px-20 py-16 max-w-7xl mx-auto">
-        <h2 className="text-4xl font-bold text-[#0000FF] mb-3" style={{ fontFamily: "Times New Roman, serif" }}>
-          Random Savings Account Setup
-        </h2>
-        <p className="text-gray-900 mb-10 max-w-4xl text-base">
-          Automate your savings effortlessly. Set your weekly transfer range, and we'll handle the rest by transferring
-          a random amount within your chosen range each week.
-        </p>
+        <div className="flex items-center gap-4 mb-6">
+          <Link href="/accounts">
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          </Link>
+          <h2 className="text-4xl font-bold text-[#0000FF]" style={{ fontFamily: "Times New Roman, serif" }}>
+            RSM Account Settings
+          </h2>
+        </div>
 
+        {/* Balance and Recent Transactions */}
+        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Current Balance</p>
+              <p className="text-3xl font-bold text-[#0000FF]">RM {balance.toFixed(2)}</p>
+            </div>
+            <div className="bg-[#0000FF] text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-lg">
+              RSM
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Transactions</h3>
+            {transactions.length > 0 ? (
+              <div className="space-y-3">
+                {transactions.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{transaction.description}</p>
+                      <p className="text-sm text-gray-500">{transaction.date} • {transaction.time}</p>
+                    </div>
+                    <p className="text-lg font-semibold text-[#0000FF]">+RM {transaction.amount.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No transactions yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Settings Section */}
         <div className="bg-white border border-gray-200 rounded-xl p-12 shadow-sm">
+          <h3 className="text-2xl font-bold text-[#0000FF] mb-6" style={{ fontFamily: "Times New Roman, serif" }}>
+            Reset Savings Settings
+          </h3>
+          <p className="text-gray-900 mb-8 max-w-4xl text-base">
+            Adjust your weekly transfer range. We'll analyze your financial context and provide personalized recommendations.
+          </p>
+
           {/* Weekly Transfer Range */}
           <div className="mb-8">
             <label className="block text-gray-900 font-semibold mb-6 text-base">Weekly Transfer Range</label>
@@ -389,9 +482,11 @@ export default function SetupPage() {
         </div>
 
         <div className="flex justify-end gap-4 mt-6">
-          <button className="px-8 py-3 border-2 border-[#0000FF] text-[#0000FF] hover:bg-blue-50 bg-white rounded-md text-sm font-semibold transition-colors">
-            Cancel
-          </button>
+          <Link href="/accounts">
+            <button className="px-8 py-3 border-2 border-[#0000FF] text-[#0000FF] hover:bg-blue-50 bg-white rounded-md text-sm font-semibold transition-colors">
+              Cancel
+            </button>
+          </Link>
           {hasAccepted ? (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 text-green-600">
@@ -414,7 +509,7 @@ export default function SetupPage() {
                 }}
                 className="px-8 py-3 bg-[#0000FF] hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors"
               >
-                Submit
+                Save Changes
               </button>
             </div>
           ) : (
@@ -429,7 +524,7 @@ export default function SetupPage() {
                   Analyzing...
                 </>
               ) : (
-                'Submit & Get AI Recommendation'
+                'Get AI Recommendation'
               )}
             </button>
           )}
@@ -438,3 +533,4 @@ export default function SetupPage() {
     </div>
   )
 }
+
