@@ -74,9 +74,9 @@ export default function AccountsPage() {
             <Link href="/transfers" className="hover:opacity-80 text-sm">
               Transfers
             </Link>
-            <a href="#" className="hover:opacity-80 text-sm">
+            <Link href="/notifications" className="hover:opacity-80 text-sm">
               Notifications
-            </a>
+            </Link>
           </nav>
         </div>
         <div className="bg-blue-700/50 text-white rounded-full w-10 h-10 flex items-center justify-center font-medium text-sm">
