@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sparkles, Loader2, CheckCircle, X } from "lucide-react"
 import Link from "next/link"
@@ -107,6 +108,36 @@ function analyzeUserContext(
 }
 
 export default function SetupPage() {
+  const [minAmount, setMinAmount] = useState("0.00")
+  const [maxAmount, setMaxAmount] = useState("0.00")
+  const [rangeMin, setRangeMin] = useState(0)
+  const [rangeMax, setRangeMax] = useState(0)
+
+  // Fixed slider range from 0 to 30
+  const sliderMax = 30
+
+  // Helper function to round to nearest 0.5
+  const roundToHalf = (value: number): number => {
+    return Math.round(value * 2) / 2
+  }
+
+  // Synchronize slider to manual inputs (slider is visual representation)
+  useEffect(() => {
+    const min = parseFloat(minAmount)
+    const max = parseFloat(maxAmount)
+    
+    if (!isNaN(min) && min >= 0) {
+      const rounded = roundToHalf(min)
+      const clamped = Math.max(0, Math.min(30, rounded))
+      setRangeMin(clamped)
+    }
+    if (!isNaN(max) && max >= 0) {
+      const rounded = roundToHalf(max)
+      const clamped = Math.max(0, Math.min(30, rounded))
+      setRangeMax(clamped)
+    }
+  }, [minAmount, maxAmount])
+
   const router = useRouter()
   const [minAmount, setMinAmount] = useState("20.00")
   const [maxAmount, setMaxAmount] = useState("20.00")
@@ -201,7 +232,7 @@ export default function SetupPage() {
       setAiRecommendation(null) // Clear the recommendation
     }
   }
-
+  
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#0000FF] text-white px-6 py-4 flex items-center justify-between">
@@ -238,7 +269,7 @@ export default function SetupPage() {
 
       <main className="px-20 py-16 max-w-7xl mx-auto">
         <h2 className="text-4xl font-bold text-[#0000FF] mb-3" style={{ fontFamily: "Times New Roman, serif" }}>
-          Random Savings Account Setup
+          Random Savings Pocket (RMS) Setup
         </h2>
         <p className="text-gray-900 mb-10 max-w-4xl text-base">
           Automate your savings effortlessly. Set your weekly transfer range, and we'll handle the rest by transferring
@@ -256,22 +287,22 @@ export default function SetupPage() {
                 <div
                   className="absolute h-full bg-[#0000FF] rounded-full"
                   style={{
-                    left: `${((rangeMin - 1) / 9) * 100}%`,
-                    width: `${((rangeMax - rangeMin) / 9) * 100}%`,
+                    left: `${(rangeMin / sliderMax) * 100}%`,
+                    width: `${((rangeMax - rangeMin) / sliderMax) * 100}%`,
                   }}
                 />
                 {/* Left handle (blue dot) */}
                 <div
                   className="absolute w-4 h-4 bg-[#0000FF] rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 cursor-pointer border-2 border-white shadow-md"
                   style={{
-                    left: `${((rangeMin - 1) / 9) * 100}%`,
+                    left: `${(rangeMin / sliderMax) * 100}%`,
                   }}
                 />
                 {/* Right handle (blue dot) */}
                 <div
                   className="absolute w-4 h-4 bg-[#0000FF] rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 cursor-pointer border-2 border-white shadow-md"
                   style={{
-                    left: `${((rangeMax - 1) / 9) * 100}%`,
+                    left: `${(rangeMax / sliderMax) * 100}%`,
                   }}
                 />
               </div>
@@ -279,30 +310,38 @@ export default function SetupPage() {
               {/* Invisible range inputs for interaction */}
               <input
                 type="range"
-                min="1"
-                max="10"
+                min="0"
+                max="30"
+                step="0.5"
                 value={rangeMin}
                 onChange={(e) => {
-                  const val = Number(e.target.value)
-                  if (val < rangeMax) setRangeMin(val)
+                  const val = roundToHalf(Number(e.target.value))
+                  if (val <= rangeMax) {
+                    setRangeMin(val)
+                    setMinAmount(val.toFixed(2))
+                  }
                 }}
                 className="absolute top-0 left-0 w-full h-8 opacity-0 cursor-pointer z-10"
               />
               <input
                 type="range"
-                min="1"
-                max="10"
+                min="0"
+                max="30"
+                step="0.5"
                 value={rangeMax}
                 onChange={(e) => {
-                  const val = Number(e.target.value)
-                  if (val > rangeMin) setRangeMax(val)
+                  const val = roundToHalf(Number(e.target.value))
+                  if (val >= rangeMin) {
+                    setRangeMax(val)
+                    setMaxAmount(val.toFixed(2))
+                  }
                 }}
                 className="absolute top-0 left-0 w-full h-8 opacity-0 cursor-pointer z-10"
               />
 
               <div className="flex justify-between mt-3 text-sm font-semibold text-[#0000FF]">
-                <span>RM {rangeMin}.00</span>
-                <span>RM {rangeMax}.00</span>
+                <span>RM {minAmount || "0.00"}</span>
+                <span>RM {maxAmount || "0.00"}</span>
               </div>
             </div>
           </div>
@@ -313,8 +352,27 @@ export default function SetupPage() {
               <input
                 type="text"
                 value={`RM ${minAmount}`}
-                onChange={(e) => setMinAmount(e.target.value.replace("RM ", ""))}
-                placeholder="RM 20.00"
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace("RM ", "").replace(/[^0-9.]/g, "")
+                  setMinAmount(rawValue)
+                }}
+                onBlur={(e) => {
+                  const numValue = parseFloat(minAmount)
+                  if (isNaN(numValue) || numValue < 0) {
+                    setMinAmount("0.00")
+                  } else {
+                    const rounded = roundToHalf(numValue)
+                    const clamped = Math.max(0, Math.min(30, rounded))
+                    const maxVal = parseFloat(maxAmount)
+                    if (!isNaN(maxVal) && clamped > maxVal) {
+                      const roundedMax = roundToHalf(maxVal)
+                      setMinAmount(roundedMax.toFixed(2))
+                    } else {
+                      setMinAmount(clamped.toFixed(2))
+                    }
+                  }
+                }}
+                placeholder="RM 0.00"
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0000FF] focus:border-transparent text-gray-500"
               />
             </div>
@@ -323,8 +381,27 @@ export default function SetupPage() {
               <input
                 type="text"
                 value={`RM ${maxAmount}`}
-                onChange={(e) => setMaxAmount(e.target.value.replace("RM ", ""))}
-                placeholder="RM 20.00"
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace("RM ", "").replace(/[^0-9.]/g, "")
+                  setMaxAmount(rawValue)
+                }}
+                onBlur={(e) => {
+                  const numValue = parseFloat(maxAmount)
+                  if (isNaN(numValue) || numValue < 0) {
+                    setMaxAmount("0.00")
+                  } else {
+                    const rounded = roundToHalf(numValue)
+                    const clamped = Math.max(0, Math.min(30, rounded))
+                    const minVal = parseFloat(minAmount)
+                    if (!isNaN(minVal) && clamped < minVal) {
+                      const roundedMin = roundToHalf(minVal)
+                      setMaxAmount(roundedMin.toFixed(2))
+                    } else {
+                      setMaxAmount(clamped.toFixed(2))
+                    }
+                  }
+                }}
+                placeholder="RM 0.00"
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0000FF] focus:border-transparent text-gray-500"
               />
             </div>
@@ -332,7 +409,7 @@ export default function SetupPage() {
 
           <div className="bg-[#F5F0E8] border-l-4 border-[#B8997A] px-5 py-4 rounded-sm">
             <p className="text-[#8B7355] text-sm">
-              Lyft bank will transfer a random amount of RM {rangeMin} to RM {rangeMax} to your savings each week.
+              Lyft bank will transfer a random amount of RM {minAmount || "0.00"} to RM {maxAmount || "0.00"} to your savings each week.
             </p>
           </div>
 
