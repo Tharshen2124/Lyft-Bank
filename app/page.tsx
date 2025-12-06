@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Sparkles } from "lucide-react"
 import Link from "next/link"
 
@@ -147,15 +146,12 @@ export default function HomePage() {
         </div>
 
         <div className="flex justify-end gap-4 mt-6">
-          <Button
-            variant="outline"
-            className="px-8 py-3 border-2 border-[#0000FF] text-[#0000FF] hover:bg-blue-50 bg-white rounded-md text-sm font-semibold"
-          >
+          <button className="px-8 py-3 border-2 border-[#0000FF] text-[#0000FF] hover:bg-blue-50 bg-white rounded-md text-sm font-semibold transition-colors">
             Cancel
-          </Button>
-          <Button className="px-8 py-3 bg-[#0000FF] hover:bg-blue-700 text-white rounded-md text-sm font-semibold">
+          </button>
+          <button className="px-8 py-3 bg-[#0000FF] hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors">
             Submit
-          </Button>
+          </button>
         </div>
       </main>
     </div>

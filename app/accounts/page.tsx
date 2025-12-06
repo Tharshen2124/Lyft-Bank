@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { Sparkles, Plus, Edit2 } from "lucide-react"
 import Link from "next/link"
 
@@ -141,21 +140,18 @@ export default function AccountsPage() {
                         className="border border-[#0000FF] rounded px-2 py-1 text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-[#0000FF]"
                         autoFocus
                       />
-                      <Button
+                      <button
                         onClick={() => saveEdit(pocket.id)}
-                        className="bg-[#0000FF] hover:bg-blue-700 text-white text-xs px-3 py-1"
-                        size="sm"
+                        className="bg-[#0000FF] hover:bg-blue-700 text-white text-xs px-3 py-1 rounded transition-colors"
                       >
                         Save
-                      </Button>
-                      <Button
+                      </button>
+                      <button
                         onClick={cancelEdit}
-                        variant="outline"
-                        className="border-gray-300 text-gray-600 text-xs px-3 py-1 bg-transparent"
-                        size="sm"
+                        className="border border-gray-300 text-gray-600 text-xs px-3 py-1 bg-white hover:bg-gray-50 rounded transition-colors"
                       >
                         Cancel
-                      </Button>
+                      </button>
                     </div>
                   ) : (
                     <>
@@ -175,13 +171,13 @@ export default function AccountsPage() {
           </div>
 
           <div className="flex justify-center">
-            <Button
+            <button
               onClick={addPocket}
-              className="bg-[#0000FF] hover:bg-blue-700 text-white rounded-full px-8 py-6 text-sm font-semibold flex items-center gap-2"
+              className="bg-[#0000FF] hover:bg-blue-700 text-white rounded-full px-8 py-6 text-sm font-semibold flex items-center gap-2 transition-colors"
             >
               <Plus className="w-5 h-5" />
               Add Save Pocket
-            </Button>
+            </button>
           </div>
         </section>
       </main>

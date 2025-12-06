@@ -2,7 +2,6 @@
 
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { Button } from "@/components/ui/button"
 
 export default function LoginPage() {
   const handleGoogleSignIn = () => {
@@ -26,9 +25,9 @@ export default function LoginPage() {
           <h1 className="text-4xl font-bold text-blue-600 mb-4">Welcome!</h1>
           <p className="text-gray-700 mb-8">Sign in to your account to continue.</p>
 
-          <Button
+          <button
             onClick={handleGoogleSignIn}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 px-8 rounded-xl flex items-center justify-center gap-3 text-lg"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 px-8 rounded-xl flex items-center justify-center gap-3 text-lg transition-colors"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24">
               <path
@@ -49,7 +48,7 @@ export default function LoginPage() {
               />
             </svg>
             Sign in with Google
-          </Button>
+          </button>
         </div>
       </div>
     </div>

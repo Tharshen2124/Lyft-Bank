@@ -9,8 +9,9 @@ interface Notification {
   title: string
   date: string
   time: string
-  icon: "transfer" | "alert" | "success"
 }
+
+
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([
@@ -18,7 +19,7 @@ export default function NotificationsPage() {
       id: "1",
       title: "Transfer to Hamza Resources was made successfully!",
       date: "2nd Dec 2025",
-      time: "11.46 am",
+      time: "11.46 am"
     },
     {
       id: "2",
