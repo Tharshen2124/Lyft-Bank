@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Sparkles, ArrowLeft, CheckCircle } from "lucide-react"
 
-// Mock RSM settings - in real app, this would come from the database
+// Default RSM settings fallback
 const DEFAULT_RSM_MIN = 5.00
 const DEFAULT_RSM_MAX = 50.00
 
@@ -17,6 +17,24 @@ export default function TransactionPage() {
   const [showNotification, setShowNotification] = useState(false)
   const [rsmSavings, setRsmSavings] = useState(0)
   const [transferSuccess, setTransferSuccess] = useState(false)
+  const [rsmMin, setRsmMin] = useState(DEFAULT_RSM_MIN)
+  const [rsmMax, setRsmMax] = useState(DEFAULT_RSM_MAX)
+
+  // Load RSM settings from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const savedSettings = localStorage.getItem("rsm_settings")
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings)
+          if (settings.minAmount) setRsmMin(settings.minAmount)
+          if (settings.maxAmount) setRsmMax(settings.maxAmount)
+        } catch (error) {
+          console.error("Error loading RSM settings:", error)
+        }
+      }
+    }
+  }, [])
 
   // Get user info from query params
   const userId = searchParams.get("userId")
@@ -72,9 +90,26 @@ export default function TransactionPage() {
     // Simulate transaction processing
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
-    // Calculate RSM savings (random between min and max)
-    const savings = calculateRSMSavings(DEFAULT_RSM_MIN, DEFAULT_RSM_MAX)
+    // Calculate RSM savings (random between saved min and max, or defaults)
+    const savings = calculateRSMSavings(rsmMin, rsmMax)
     setRsmSavings(savings)
+
+    // Save transaction to localStorage for balance calculation
+    if (typeof window !== "undefined") {
+      const transactions = JSON.parse(localStorage.getItem("lyft_transactions") || "[]")
+      const newTransaction = {
+        id: `txn-${Date.now()}`,
+        transferAmount: transferAmount,
+        rsmSavings: savings,
+        recipient: userName,
+        timestamp: new Date().toISOString(),
+      }
+      transactions.push(newTransaction)
+      localStorage.setItem("lyft_transactions", JSON.stringify(transactions))
+      
+      // Dispatch custom event to update accounts page in same tab
+      window.dispatchEvent(new Event("transactionComplete"))
+    }
 
     // Save notification to history
     saveNotificationToHistory(savings, transferAmount, userName)

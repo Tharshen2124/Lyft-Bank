@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Sparkles, Plus, Edit2, Power } from "lucide-react"
 import Link from "next/link"
 
@@ -12,10 +12,69 @@ interface SavePocket {
 }
 
 export default function AccountsPage() {
-  const [mainAccountBalance, setMainAccountBalance] = useState(3900.0)
-  const [rsmBalance, setRsmBalance] = useState(3900.0)
+  // Base balances (starting amounts)
+  const BASE_MAIN_BALANCE = 3900.0
+  const BASE_RSM_BALANCE = 3900.0
+  
+  const [mainAccountBalance, setMainAccountBalance] = useState(BASE_MAIN_BALANCE)
+  const [rsmBalance, setRsmBalance] = useState(BASE_RSM_BALANCE)
   const [isRSMEnabled, setIsRSMEnabled] = useState(true)
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  
+  // Load and calculate balances from transactions
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const transactions = JSON.parse(localStorage.getItem("lyft_transactions") || "[]")
+      
+      // Calculate total deductions and RSM savings from all transactions
+      let totalDeductions = 0
+      let totalRSMSavings = 0
+      
+      transactions.forEach((txn: any) => {
+        totalDeductions += txn.transferAmount || 0
+        totalRSMSavings += txn.rsmSavings || 0
+      })
+      
+      // Update balances: Main = base - transfer - RSM savings, RSM = base + RSM savings
+      setMainAccountBalance(BASE_MAIN_BALANCE - totalDeductions - totalRSMSavings)
+      setRsmBalance(BASE_RSM_BALANCE + totalRSMSavings)
+      
+      // Check if RSM was disabled
+      const rsmStatus = localStorage.getItem("rsm_enabled")
+      if (rsmStatus === "false") {
+        setIsRSMEnabled(false)
+      }
+    }
+  }, [])
+
+  // Listen for storage changes to update balances when new transactions occur
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const handleStorageChange = () => {
+        const transactions = JSON.parse(localStorage.getItem("lyft_transactions") || "[]")
+        
+        let totalDeductions = 0
+        let totalRSMSavings = 0
+        
+        transactions.forEach((txn: any) => {
+          totalDeductions += txn.transferAmount || 0
+          totalRSMSavings += txn.rsmSavings || 0
+        })
+        
+        setMainAccountBalance(BASE_MAIN_BALANCE - totalDeductions - totalRSMSavings)
+        setRsmBalance(BASE_RSM_BALANCE + totalRSMSavings)
+      }
+
+      window.addEventListener("storage", handleStorageChange)
+      // Also listen for custom event for same-tab updates
+      window.addEventListener("transactionComplete", handleStorageChange)
+
+      return () => {
+        window.removeEventListener("storage", handleStorageChange)
+        window.removeEventListener("transactionComplete", handleStorageChange)
+      }
+    }
+  }, [])
   
   const [pockets, setPockets] = useState<SavePocket[]>([
     { id: 1, name: "Pocket 1", color: "bg-cyan-300", balance: 780.0 },
@@ -30,9 +89,13 @@ export default function AccountsPage() {
       // Toggling OFF: Show confirmation dialog
       setShowConfirmDialog(true)
     } else {
-      // Toggling ON: Start from 0
-      setRsmBalance(0)
+      // Toggling ON: Start from current calculated balance
       setIsRSMEnabled(true)
+      
+      // Save RSM enabled status
+      if (typeof window !== "undefined") {
+        localStorage.setItem("rsm_enabled", "true")
+      }
     }
   }
 
@@ -41,6 +104,11 @@ export default function AccountsPage() {
     setRsmBalance(0)
     setIsRSMEnabled(false)
     setShowConfirmDialog(false)
+    
+    // Save RSM disabled status
+    if (typeof window !== "undefined") {
+      localStorage.setItem("rsm_enabled", "false")
+    }
   }
 
   const cancelDisableRSM = () => {
