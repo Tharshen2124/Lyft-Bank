@@ -220,10 +220,29 @@ export default function RSMSettingsPage() {
       const originalMin = parseFloat(minAmount) || 0
       const originalMax = parseFloat(maxAmount) || 0
       
-      setMinAmount(aiRecommendation.newMin.toFixed(2))
-      setMaxAmount(aiRecommendation.newMax.toFixed(2))
+      const newMin = aiRecommendation.newMin
+      const newMax = aiRecommendation.newMax
+      
+      setMinAmount(newMin.toFixed(2))
+      setMaxAmount(newMax.toFixed(2))
       setShowRecommendation(false)
       setHasAccepted(true) // Mark as accepted to prevent further recommendations
+      
+      // Save settings to localStorage immediately so transactions use the new range
+      if (typeof window !== "undefined") {
+        // Update rangeMin/rangeMax to match new values (for the 1-10 slider scale)
+        const newRangeMin = Math.max(1, Math.min(10, Math.round(newMin)))
+        const newRangeMax = Math.max(1, Math.min(10, Math.round(newMax)))
+        setRangeMin(newRangeMin)
+        setRangeMax(newRangeMax)
+        
+        localStorage.setItem("rsm_settings", JSON.stringify({
+          minAmount: newMin,
+          maxAmount: newMax,
+          rangeMin: newRangeMin,
+          rangeMax: newRangeMax,
+        }))
+      }
       
       // Save to notifications
       saveNotificationToHistory(aiRecommendation, 'accepted', originalMin, originalMax)

@@ -42,10 +42,30 @@ export default function TransactionPage() {
   const userMobile = searchParams.get("mobile") || ""
   const userBank = searchParams.get("bank") || ""
 
-  // Calculate random RSM savings amount
+  // Calculate random RSM savings amount within the specified range
   const calculateRSMSavings = (min: number, max: number): number => {
-    const randomAmount = Math.random() * (max - min) + min
-    return Math.round(randomAmount * 100) / 100 // Round to 2 decimal places
+    // Ensure min and max are valid numbers
+    const validMin = Math.max(0, min || DEFAULT_RSM_MIN)
+    const validMax = Math.max(validMin, max || DEFAULT_RSM_MAX)
+    
+    // Ensure min <= max
+    const actualMin = Math.min(validMin, validMax)
+    const actualMax = Math.max(validMin, validMax)
+    
+    // Generate random amount within range [min, max]
+    // Math.random() gives [0, 1), so (max - min) * random gives [0, max - min)
+    // Adding min gives [min, max)
+    // To include max, we use (max - min + 0.01) to ensure we can reach max
+    const range = actualMax - actualMin
+    const randomAmount = actualMin + (Math.random() * range)
+    
+    // Round to 2 decimal places and clamp to ensure it's within bounds
+    let result = Math.round(randomAmount * 100) / 100
+    
+    // Ensure result is within [min, max] range (safety clamp)
+    result = Math.max(actualMin, Math.min(actualMax, result))
+    
+    return result
   }
 
   const saveNotificationToHistory = (rsmAmount: number, transferAmount: number, recipientName: string) => {
@@ -91,8 +111,17 @@ export default function TransactionPage() {
     await new Promise((resolve) => setTimeout(resolve, 1500))
 
     // Calculate RSM savings (random between saved min and max, or defaults)
-    const savings = calculateRSMSavings(rsmMin, rsmMax)
-    setRsmSavings(savings)
+    // Ensure values are valid before calculation
+    const validMin = rsmMin > 0 ? rsmMin : DEFAULT_RSM_MIN
+    const validMax = rsmMax >= validMin ? rsmMax : validMin + DEFAULT_RSM_MAX
+    
+    // Calculate savings - function ensures it's within [validMin, validMax] range
+    const savings = calculateRSMSavings(validMin, validMax)
+    
+    // Final validation: ensure savings is within the exact range
+    const finalSavings = Math.max(validMin, Math.min(validMax, savings))
+    
+    setRsmSavings(finalSavings)
 
     // Save transaction to localStorage for balance calculation
     if (typeof window !== "undefined") {
@@ -100,9 +129,11 @@ export default function TransactionPage() {
       const newTransaction = {
         id: `txn-${Date.now()}`,
         transferAmount: transferAmount,
-        rsmSavings: savings,
+        rsmSavings: finalSavings, // Use validated savings amount (guaranteed within range)
         recipient: userName,
         timestamp: new Date().toISOString(),
+        rsmMin: validMin, // Store the range used for reference
+        rsmMax: validMax,
       }
       transactions.push(newTransaction)
       localStorage.setItem("lyft_transactions", JSON.stringify(transactions))
@@ -112,7 +143,7 @@ export default function TransactionPage() {
     }
 
     // Save notification to history
-    saveNotificationToHistory(savings, transferAmount, userName)
+    saveNotificationToHistory(finalSavings, transferAmount, userName)
 
     setIsProcessing(false)
     setTransferSuccess(true)
