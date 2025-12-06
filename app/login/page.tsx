@@ -1,12 +1,42 @@
 "use client"
 
+import { useState } from "react"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { supabase } from "@/lib/supabase"
 
 export default function LoginPage() {
-  const handleGoogleSignIn = () => {
-    console.log("[v0] Google sign-in clicked")
-    // Handle Google authentication here
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleGoogleSignIn = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+
+      const { data, error: signInError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+          skipBrowserRedirect: false,
+        },
+      })
+
+      if (signInError) {
+        throw signInError
+      }
+
+      // The OAuth flow will redirect the user to Google
+      // After authentication, they'll be redirected back to /auth/callback
+    } catch (err: any) {
+      console.error("Error signing in with Google:", err)
+      setError(err.message || "Failed to sign in with Google")
+      setLoading(false)
+    }
   }
 
   return (
@@ -25,9 +55,16 @@ export default function LoginPage() {
           <h1 className="text-4xl font-bold text-blue-600 mb-4">Welcome!</h1>
           <p className="text-gray-700 mb-8">Sign in to your account to continue.</p>
 
+          {error && (
+            <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {error}
+            </div>
+          )}
+
           <button
             onClick={handleGoogleSignIn}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6 px-8 rounded-xl flex items-center justify-center gap-3 text-lg transition-colors"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-semibold py-6 px-8 rounded-xl flex items-center justify-center gap-3 text-lg transition-colors"
           >
             <svg className="w-6 h-6" viewBox="0 0 24 24">
               <path
@@ -47,7 +84,7 @@ export default function LoginPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Sign in with Google
+            {loading ? "Signing in..." : "Sign in with Google"}
           </button>
         </div>
       </div>
