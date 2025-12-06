@@ -49,7 +49,7 @@ export default function AuthCallback() {
           window.location.hash = ""
           
           // Get the next redirect URL or default to home
-          const next = searchParams.get("next") || "/accounts"
+          const next = searchParams.get("next") || "/setup"
           router.push(next)
           return
         }
@@ -66,7 +66,7 @@ export default function AuthCallback() {
             return
           }
 
-          const next = searchParams.get("next") || "/accounts"
+          const next = searchParams.get("next") || "/setup"
           router.push(next)
           return
         }
