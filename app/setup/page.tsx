@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Sparkles, Loader2, CheckCircle, X } from "lucide-react"
@@ -139,10 +138,6 @@ export default function SetupPage() {
   }, [minAmount, maxAmount])
 
   const router = useRouter()
-  const [minAmount, setMinAmount] = useState("20.00")
-  const [maxAmount, setMaxAmount] = useState("20.00")
-  const [rangeMin, setRangeMin] = useState(1)
-  const [rangeMax, setRangeMax] = useState(5)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [aiRecommendation, setAiRecommendation] = useState<AIRecommendation | null>(null)
   const [showRecommendation, setShowRecommendation] = useState(false)
