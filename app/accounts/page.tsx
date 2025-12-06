@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Sparkles, Plus, Edit2 } from "lucide-react"
+import { Sparkles, Plus, Edit2, Power } from "lucide-react"
 import Link from "next/link"
 
 interface SavePocket {
@@ -12,6 +12,11 @@ interface SavePocket {
 }
 
 export default function AccountsPage() {
+  const [mainAccountBalance, setMainAccountBalance] = useState(3900.0)
+  const [rsmBalance, setRsmBalance] = useState(3900.0)
+  const [isRSMEnabled, setIsRSMEnabled] = useState(true)
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  
   const [pockets, setPockets] = useState<SavePocket[]>([
     { id: 1, name: "Pocket 1", color: "bg-cyan-300", balance: 780.0 },
     { id: 2, name: "Pocket 2", color: "bg-amber-100", balance: 780.0 },
@@ -19,6 +24,28 @@ export default function AccountsPage() {
   ])
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editingName, setEditingName] = useState("")
+
+  const handleRSMToggle = () => {
+    if (isRSMEnabled) {
+      // Toggling OFF: Show confirmation dialog
+      setShowConfirmDialog(true)
+    } else {
+      // Toggling ON: Start from 0
+      setRsmBalance(0)
+      setIsRSMEnabled(true)
+    }
+  }
+
+  const confirmDisableRSM = () => {
+    setMainAccountBalance(prev => prev + rsmBalance)
+    setRsmBalance(0)
+    setIsRSMEnabled(false)
+    setShowConfirmDialog(false)
+  }
+
+  const cancelDisableRSM = () => {
+    setShowConfirmDialog(false)
+  }
 
   const addPocket = () => {
     const nextNumber = pockets.length + 1
@@ -86,7 +113,7 @@ export default function AccountsPage() {
 
       <main className="px-20 py-16 max-w-7xl mx-auto">
         <h2 className="text-4xl font-bold text-[#0000FF] mb-2">My Accounts</h2>
-        <p className="text-gray-900 mb-12 text-base">Total Balance: RM 4900.00</p>
+        <p className="text-gray-900 mb-12 text-base">Total Balance: RM {(mainAccountBalance + rsmBalance + pockets.reduce((sum, p) => sum + p.balance, 0)).toFixed(2)}</p>
 
         {/* Ready to spend */}
         <section className="mb-12">
@@ -98,24 +125,60 @@ export default function AccountsPage() {
               </div>
               <span className="text-gray-900 font-medium">Main Account</span>
             </div>
-            <span className="text-gray-900 font-semibold">RM 3900.00</span>
+            <span className="text-gray-900 font-semibold">RM {mainAccountBalance.toFixed(2)}</span>
           </div>
         </section>
 
         {/* Random Savings Account */}
         <section className="mb-12">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Random Savings Account (RSM)</h3>
-          <Link href="/accounts/rsm">
-            <div className="bg-white border border-gray-200 rounded-lg p-6 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Random Savings Account (RSM)</h3>
+            <button
+              onClick={handleRSMToggle}
+              className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 ${
+                isRSMEnabled 
+                  ? 'bg-[#0000FF]/80 hover:bg-[#0000FF]' 
+                  : 'bg-gray-300/60 hover:bg-gray-300'
+              }`}
+              aria-label={isRSMEnabled ? 'Disable RSM' : 'Enable RSM'}
+            >
+              <Power 
+                className={`absolute left-1.5 h-4 w-4 transition-all duration-300 ${
+                  isRSMEnabled 
+                    ? 'text-white opacity-90' 
+                    : 'text-gray-500 opacity-40'
+                }`}
+              />
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${
+                  isRSMEnabled ? 'translate-x-8' : 'translate-x-1'
+                }`}
+              />
+            </button>
+          </div>
+          {isRSMEnabled ? (
+            <Link href="/accounts/rsm">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className="bg-[#0000FF] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xs">
+                    RSM
+                  </div>
+                  <span className="text-gray-900 font-medium">RSM Account</span>
+                </div>
+                <span className="text-gray-900 font-semibold">RM {rsmBalance.toFixed(2)}</span>
+              </div>
+            </Link>
+          ) : (
+            <div className="bg-gray-100 border border-gray-300 rounded-lg p-6 flex items-center justify-between opacity-60 cursor-not-allowed">
               <div className="flex items-center gap-4">
-                <div className="bg-[#0000FF] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xs">
+                <div className="bg-gray-400 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xs">
                   RSM
                 </div>
-                <span className="text-gray-900 font-medium">RSM Account</span>
+                <span className="text-gray-500 font-medium">RSM Account</span>
               </div>
-              <span className="text-gray-900 font-semibold">RM 3900.00</span>
+              <span className="text-gray-500 font-semibold">RM {rsmBalance.toFixed(2)}</span>
             </div>
-          </Link>
+          )}
         </section>
 
         {/* Save Pockets */}
@@ -183,6 +246,40 @@ export default function AccountsPage() {
           </div>
         </section>
       </main>
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
+            <h3 className="text-2xl font-bold text-[#0000FF] mb-4">Disable RSM Account?</h3>
+            <p className="text-gray-700 mb-2">
+              Are you sure you want to disable your RSM Account?
+            </p>
+            <div className="bg-blue-50 border-l-4 border-[#0000FF] p-4 rounded mb-6">
+              <p className="text-sm text-gray-700">
+                <strong>RM {rsmBalance.toFixed(2)}</strong> will be automatically transferred to your Main Account.
+              </p>
+              <p className="text-sm text-gray-700 mt-2">
+                Your RSM Account will be reset to <strong>RM 0.00</strong> and disabled.
+              </p>
+            </div>
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={cancelDisableRSM}
+                className="px-6 py-2.5 border-2 border-gray-300 text-gray-700 rounded-md text-sm font-semibold hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDisableRSM}
+                className="px-6 py-2.5 bg-[#0000FF] hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors"
+              >
+                Confirm & Transfer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
