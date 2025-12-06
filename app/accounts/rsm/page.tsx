@@ -1,9 +1,8 @@
 "use client"
 
-import { useState } from "react"
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { Sparkles, Loader2, CheckCircle, X } from "lucide-react"
+import { Sparkles, Loader2, CheckCircle, X, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 
 interface AIRecommendation {
@@ -11,6 +10,14 @@ interface AIRecommendation {
   newMax: number
   reasoning: string
   headline: string
+}
+
+interface RSMTransaction {
+  id: string
+  amount: number
+  date: string
+  time: string
+  description: string
 }
 
 // Helper function to check if current date is during festival season
@@ -107,38 +114,10 @@ function analyzeUserContext(
   }
 }
 
-export default function SetupPage() {
-  const [minAmount, setMinAmount] = useState("0.00")
-  const [maxAmount, setMaxAmount] = useState("0.00")
-  const [rangeMin, setRangeMin] = useState(0)
-  const [rangeMax, setRangeMax] = useState(0)
-
-  // Fixed slider range from 0 to 30
-  const sliderMax = 30
-
-  // Helper function to round to nearest 0.5
-  const roundToHalf = (value: number): number => {
-    return Math.round(value * 2) / 2
-  }
-
-  // Synchronize slider to manual inputs (slider is visual representation)
-  useEffect(() => {
-    const min = parseFloat(minAmount)
-    const max = parseFloat(maxAmount)
-    
-    if (!isNaN(min) && min >= 0) {
-      const rounded = roundToHalf(min)
-      const clamped = Math.max(0, Math.min(30, rounded))
-      setRangeMin(clamped)
-    }
-    if (!isNaN(max) && max >= 0) {
-      const rounded = roundToHalf(max)
-      const clamped = Math.max(0, Math.min(30, rounded))
-      setRangeMax(clamped)
-    }
-  }, [minAmount, maxAmount])
-
+export default function RSMSettingsPage() {
   const router = useRouter()
+  const [balance, setBalance] = useState(3900.00)
+  const [transactions, setTransactions] = useState<RSMTransaction[]>([])
   const [minAmount, setMinAmount] = useState("20.00")
   const [maxAmount, setMaxAmount] = useState("20.00")
   const [rangeMin, setRangeMin] = useState(1)
@@ -147,6 +126,41 @@ export default function SetupPage() {
   const [aiRecommendation, setAiRecommendation] = useState<AIRecommendation | null>(null)
   const [showRecommendation, setShowRecommendation] = useState(false)
   const [hasAccepted, setHasAccepted] = useState(false)
+
+  // Load saved settings and generate mock transactions
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Load saved RSM settings
+      const savedSettings = localStorage.getItem("rsm_settings")
+      if (savedSettings) {
+        try {
+          const settings = JSON.parse(savedSettings)
+          setMinAmount(settings.minAmount?.toFixed(2) || "20.00")
+          setMaxAmount(settings.maxAmount?.toFixed(2) || "20.00")
+          setRangeMin(settings.rangeMin || 1)
+          setRangeMax(settings.rangeMax || 5)
+        } catch (error) {
+          console.error("Error loading RSM settings:", error)
+        }
+      }
+
+      // Generate mock recent transactions
+      const mockTransactions: RSMTransaction[] = []
+      for (let i = 0; i < 5; i++) {
+        const date = new Date()
+        date.setDate(date.getDate() - i)
+        const amount = Math.random() * 50 + 10 // RM 10-60
+        mockTransactions.push({
+          id: `txn-${i}`,
+          amount: Math.round(amount * 100) / 100,
+          date: date.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" }),
+          time: date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", hour12: true }),
+          description: `RSM Savings Transfer`,
+        })
+      }
+      setTransactions(mockTransactions)
+    }
+  }, [])
 
   const handleSubmit = () => {
     // Don't allow new recommendations if one has already been accepted
@@ -232,12 +246,14 @@ export default function SetupPage() {
       setAiRecommendation(null) // Clear the recommendation
     }
   }
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-[#0000FF] text-white px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <h1 className="text-xl font-bold">Lyft Bank</h1>
+          <Link href="/">
+            <h1 className="text-xl font-bold cursor-pointer hover:opacity-80">Lyft Bank</h1>
+          </Link>
           <Link href="/ai">
             <button className="relative px-6 py-2.5 rounded-full text-white font-medium text-sm flex items-center gap-2 overflow-hidden group">
               <span className="absolute inset-0 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 p-[2px]">
@@ -251,15 +267,15 @@ export default function SetupPage() {
             </button>
           </Link>
           <nav className="flex items-center gap-8 ml-4">
-            <Link href="/accounts" className="hover:opacity-80 text-sm">
+            <Link href="/accounts" className="hover:opacity-80 text-sm font-medium">
               Accounts
             </Link>
-            <a href="#" className="hover:opacity-80 text-sm">
+            <Link href="/transfers" className="hover:opacity-80 text-sm">
               Transfers
-            </a>
-            <a href="#" className="hover:opacity-80 text-sm">
+            </Link>
+            <Link href="/notifications" className="hover:opacity-80 text-sm">
               Notifications
-            </a>
+            </Link>
           </nav>
         </div>
         <div className="bg-blue-700/50 text-white rounded-full w-10 h-10 flex items-center justify-center font-medium text-sm">
@@ -268,15 +284,61 @@ export default function SetupPage() {
       </header>
 
       <main className="px-20 py-16 max-w-7xl mx-auto">
-        <h2 className="text-4xl font-bold text-[#0000FF] mb-3" style={{ fontFamily: "Times New Roman, serif" }}>
-          Random Savings Pocket (RMS) Setup
-        </h2>
-        <p className="text-gray-900 mb-10 max-w-4xl text-base">
-          Automate your savings effortlessly. Set your weekly transfer range, and we'll handle the rest by transferring
-          a random amount within your chosen range each week.
-        </p>
+        <div className="flex items-center gap-4 mb-6">
+          <Link href="/accounts">
+            <button className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+              <ArrowLeft className="w-5 h-5 text-gray-600" />
+            </button>
+          </Link>
+          <h2 className="text-4xl font-bold text-[#0000FF]" style={{ fontFamily: "Times New Roman, serif" }}>
+            RSM Account Settings
+          </h2>
+        </div>
 
+        {/* Balance and Recent Transactions */}
+        <div className="bg-white border border-gray-200 rounded-xl p-8 shadow-sm mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-sm text-gray-500 mb-1">Current Balance</p>
+              <p className="text-3xl font-bold text-[#0000FF]">RM {balance.toFixed(2)}</p>
+            </div>
+            <div className="bg-[#0000FF] text-white rounded-full w-16 h-16 flex items-center justify-center font-bold text-lg">
+              RSM
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Transactions</h3>
+            {transactions.length > 0 ? (
+              <div className="space-y-3">
+                {transactions.map((transaction) => (
+                  <div
+                    key={transaction.id}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200"
+                  >
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{transaction.description}</p>
+                      <p className="text-sm text-gray-500">{transaction.date} • {transaction.time}</p>
+                    </div>
+                    <p className="text-lg font-semibold text-[#0000FF]">+RM {transaction.amount.toFixed(2)}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No transactions yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Settings Section */}
         <div className="bg-white border border-gray-200 rounded-xl p-12 shadow-sm">
+          <h3 className="text-2xl font-bold text-[#0000FF] mb-6" style={{ fontFamily: "Times New Roman, serif" }}>
+            Reset Savings Settings
+          </h3>
+          <p className="text-gray-900 mb-8 max-w-4xl text-base">
+            Adjust your weekly transfer range. We'll analyze your financial context and provide personalized recommendations.
+          </p>
+
           {/* Weekly Transfer Range */}
           <div className="mb-8">
             <label className="block text-gray-900 font-semibold mb-6 text-base">Weekly Transfer Range</label>
@@ -287,22 +349,22 @@ export default function SetupPage() {
                 <div
                   className="absolute h-full bg-[#0000FF] rounded-full"
                   style={{
-                    left: `${(rangeMin / sliderMax) * 100}%`,
-                    width: `${((rangeMax - rangeMin) / sliderMax) * 100}%`,
+                    left: `${((rangeMin - 1) / 9) * 100}%`,
+                    width: `${((rangeMax - rangeMin) / 9) * 100}%`,
                   }}
                 />
                 {/* Left handle (blue dot) */}
                 <div
                   className="absolute w-4 h-4 bg-[#0000FF] rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 cursor-pointer border-2 border-white shadow-md"
                   style={{
-                    left: `${(rangeMin / sliderMax) * 100}%`,
+                    left: `${((rangeMin - 1) / 9) * 100}%`,
                   }}
                 />
                 {/* Right handle (blue dot) */}
                 <div
                   className="absolute w-4 h-4 bg-[#0000FF] rounded-full top-1/2 -translate-y-1/2 -translate-x-1/2 cursor-pointer border-2 border-white shadow-md"
                   style={{
-                    left: `${(rangeMax / sliderMax) * 100}%`,
+                    left: `${((rangeMax - 1) / 9) * 100}%`,
                   }}
                 />
               </div>
@@ -310,38 +372,30 @@ export default function SetupPage() {
               {/* Invisible range inputs for interaction */}
               <input
                 type="range"
-                min="0"
-                max="30"
-                step="0.5"
+                min="1"
+                max="10"
                 value={rangeMin}
                 onChange={(e) => {
-                  const val = roundToHalf(Number(e.target.value))
-                  if (val <= rangeMax) {
-                    setRangeMin(val)
-                    setMinAmount(val.toFixed(2))
-                  }
+                  const val = Number(e.target.value)
+                  if (val < rangeMax) setRangeMin(val)
                 }}
                 className="absolute top-0 left-0 w-full h-8 opacity-0 cursor-pointer z-10"
               />
               <input
                 type="range"
-                min="0"
-                max="30"
-                step="0.5"
+                min="1"
+                max="10"
                 value={rangeMax}
                 onChange={(e) => {
-                  const val = roundToHalf(Number(e.target.value))
-                  if (val >= rangeMin) {
-                    setRangeMax(val)
-                    setMaxAmount(val.toFixed(2))
-                  }
+                  const val = Number(e.target.value)
+                  if (val > rangeMin) setRangeMax(val)
                 }}
                 className="absolute top-0 left-0 w-full h-8 opacity-0 cursor-pointer z-10"
               />
 
               <div className="flex justify-between mt-3 text-sm font-semibold text-[#0000FF]">
-                <span>RM {minAmount || "0.00"}</span>
-                <span>RM {maxAmount || "0.00"}</span>
+                <span>RM {rangeMin}.00</span>
+                <span>RM {rangeMax}.00</span>
               </div>
             </div>
           </div>
@@ -352,27 +406,8 @@ export default function SetupPage() {
               <input
                 type="text"
                 value={`RM ${minAmount}`}
-                onChange={(e) => {
-                  const rawValue = e.target.value.replace("RM ", "").replace(/[^0-9.]/g, "")
-                  setMinAmount(rawValue)
-                }}
-                onBlur={(e) => {
-                  const numValue = parseFloat(minAmount)
-                  if (isNaN(numValue) || numValue < 0) {
-                    setMinAmount("0.00")
-                  } else {
-                    const rounded = roundToHalf(numValue)
-                    const clamped = Math.max(0, Math.min(30, rounded))
-                    const maxVal = parseFloat(maxAmount)
-                    if (!isNaN(maxVal) && clamped > maxVal) {
-                      const roundedMax = roundToHalf(maxVal)
-                      setMinAmount(roundedMax.toFixed(2))
-                    } else {
-                      setMinAmount(clamped.toFixed(2))
-                    }
-                  }
-                }}
-                placeholder="RM 0.00"
+                onChange={(e) => setMinAmount(e.target.value.replace("RM ", ""))}
+                placeholder="RM 20.00"
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0000FF] focus:border-transparent text-gray-500"
               />
             </div>
@@ -381,27 +416,8 @@ export default function SetupPage() {
               <input
                 type="text"
                 value={`RM ${maxAmount}`}
-                onChange={(e) => {
-                  const rawValue = e.target.value.replace("RM ", "").replace(/[^0-9.]/g, "")
-                  setMaxAmount(rawValue)
-                }}
-                onBlur={(e) => {
-                  const numValue = parseFloat(maxAmount)
-                  if (isNaN(numValue) || numValue < 0) {
-                    setMaxAmount("0.00")
-                  } else {
-                    const rounded = roundToHalf(numValue)
-                    const clamped = Math.max(0, Math.min(30, rounded))
-                    const minVal = parseFloat(minAmount)
-                    if (!isNaN(minVal) && clamped < minVal) {
-                      const roundedMin = roundToHalf(minVal)
-                      setMaxAmount(roundedMin.toFixed(2))
-                    } else {
-                      setMaxAmount(clamped.toFixed(2))
-                    }
-                  }
-                }}
-                placeholder="RM 0.00"
+                onChange={(e) => setMaxAmount(e.target.value.replace("RM ", ""))}
+                placeholder="RM 20.00"
                 className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0000FF] focus:border-transparent text-gray-500"
               />
             </div>
@@ -409,7 +425,7 @@ export default function SetupPage() {
 
           <div className="bg-[#F5F0E8] border-l-4 border-[#B8997A] px-5 py-4 rounded-sm">
             <p className="text-[#8B7355] text-sm">
-              Lyft bank will transfer a random amount of RM {minAmount || "0.00"} to RM {maxAmount || "0.00"} to your savings each week.
+              Lyft bank will transfer a random amount of RM {rangeMin} to RM {rangeMax} to your savings each week.
             </p>
           </div>
 
@@ -466,9 +482,11 @@ export default function SetupPage() {
         </div>
 
         <div className="flex justify-end gap-4 mt-6">
-          <button className="px-8 py-3 border-2 border-[#0000FF] text-[#0000FF] hover:bg-blue-50 bg-white rounded-md text-sm font-semibold transition-colors">
-            Cancel
-          </button>
+          <Link href="/accounts">
+            <button className="px-8 py-3 border-2 border-[#0000FF] text-[#0000FF] hover:bg-blue-50 bg-white rounded-md text-sm font-semibold transition-colors">
+              Cancel
+            </button>
+          </Link>
           {hasAccepted ? (
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 text-green-600">
@@ -491,7 +509,7 @@ export default function SetupPage() {
                 }}
                 className="px-8 py-3 bg-[#0000FF] hover:bg-blue-700 text-white rounded-md text-sm font-semibold transition-colors"
               >
-                Submit
+                Save Changes
               </button>
             </div>
           ) : (
@@ -506,7 +524,7 @@ export default function SetupPage() {
                   Analyzing...
                 </>
               ) : (
-                'Submit & Get AI Recommendation'
+                'Get AI Recommendation'
               )}
             </button>
           )}
@@ -515,3 +533,4 @@ export default function SetupPage() {
     </div>
   )
 }
+

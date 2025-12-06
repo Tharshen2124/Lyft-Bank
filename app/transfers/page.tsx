@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Sparkles, Search, X } from "lucide-react"
 
 interface User {
@@ -12,6 +13,7 @@ interface User {
 }
 
 export default function TransfersPage() {
+  const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
   const [users, setUsers] = useState<User[]>([
     { id: 1, name: "Ariff bin Abu", mobile: "123456789", bank: "Maybank" },
@@ -23,6 +25,11 @@ export default function TransfersPage() {
 
   const removeUser = (id: number) => {
     setUsers(users.filter((user) => user.id !== id))
+  }
+
+  const handleUserClick = (user: User) => {
+    // Navigate to transaction page with user info
+    router.push(`/transfers/transaction?userId=${user.id}&name=${encodeURIComponent(user.name)}&mobile=${user.mobile}&bank=${encodeURIComponent(user.bank)}`)
   }
 
   // Filter users based on search query
@@ -90,7 +97,8 @@ export default function TransfersPage() {
               filteredUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="w-full flex items-center gap-4 bg-white p-6 rounded-2xl border border-gray-200 hover:border-[#0000FF] hover:shadow-sm transition-all group"
+                  className="w-full flex items-center gap-4 bg-white p-6 rounded-2xl border border-gray-200 hover:border-[#0000FF] hover:shadow-sm transition-all group cursor-pointer"
+                  onClick={() => handleUserClick(user)}
                 >
                   <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                     <span className="text-[#0000FF] font-semibold text-lg">{user.name.charAt(0)}</span>
@@ -102,7 +110,10 @@ export default function TransfersPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => removeUser(user.id)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      removeUser(user.id)
+                    }}
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-gray-100 rounded-full"
                     aria-label="Remove contact"
                   >

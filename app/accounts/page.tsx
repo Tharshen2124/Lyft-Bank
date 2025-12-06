@@ -74,9 +74,9 @@ export default function AccountsPage() {
             <Link href="/transfers" className="hover:opacity-80 text-sm">
               Transfers
             </Link>
-            <a href="#" className="hover:opacity-80 text-sm">
+            <Link href="/notifications" className="hover:opacity-80 text-sm">
               Notifications
-            </a>
+            </Link>
           </nav>
         </div>
         <div className="bg-blue-700/50 text-white rounded-full w-10 h-10 flex items-center justify-center font-medium text-sm">
@@ -105,15 +105,17 @@ export default function AccountsPage() {
         {/* Random Savings Account */}
         <section className="mb-12">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Random Savings Account (RSM)</h3>
-          <div className="bg-white border border-gray-200 rounded-lg p-6 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4">
-              <div className="bg-[#0000FF] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xs">
-                RSM
+          <Link href="/accounts/rsm">
+            <div className="bg-white border border-gray-200 rounded-lg p-6 flex items-center justify-between shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+              <div className="flex items-center gap-4">
+                <div className="bg-[#0000FF] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xs">
+                  RSM
+                </div>
+                <span className="text-gray-900 font-medium">RSM Account</span>
               </div>
-              <span className="text-gray-900 font-medium">RSM Account</span>
+              <span className="text-gray-900 font-semibold">RM 3900.00</span>
             </div>
-            <span className="text-gray-900 font-semibold">RM 3900.00</span>
-          </div>
+          </Link>
         </section>
 
         {/* Save Pockets */}
