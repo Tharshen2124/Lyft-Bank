@@ -283,7 +283,7 @@ export default function SetupPage() {
 
       <main className="px-20 py-16 max-w-7xl mx-auto">
         <h2 className="text-4xl font-bold text-[#0000FF] mb-3" style={{ fontFamily: "Times New Roman, serif" }}>
-          Random Savings Pocket (RMS) Setup
+          Random Savings Pocket (RSP) Setup
         </h2>
         <p className="text-gray-900 mb-10 max-w-4xl text-base">
           Automate your savings effortlessly. Set your weekly transfer range, and we'll handle the rest by transferring

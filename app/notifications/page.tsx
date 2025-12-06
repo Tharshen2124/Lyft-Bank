@@ -1,8 +1,9 @@
 "use client"
 
+import { useState, useRef, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Sparkles, X, Coins } from "lucide-react"
-import { useState, useEffect } from "react"
 
 interface Notification {
   id: string

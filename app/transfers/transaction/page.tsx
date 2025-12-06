@@ -5,9 +5,9 @@ import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Sparkles, ArrowLeft, CheckCircle } from "lucide-react"
 
-// Default RSM settings fallback
-const DEFAULT_RSM_MIN = 5.00
-const DEFAULT_RSM_MAX = 50.00
+// Mock RSM settings - in real app, this would come from the database
+const DEFAULT_RSM_MIN = 6.00
+const DEFAULT_RSM_MAX = 12.00
 
 export default function TransactionPage() {
   const router = useRouter()

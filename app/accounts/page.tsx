@@ -193,10 +193,10 @@ export default function AccountsPage() {
           </div>
         </section>
 
-        {/* Random Savings Account */}
+        {/* Randomised Savings Pocket (RSP) Account */}
         <section className="mb-12">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">Random Savings Account (RSM)</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Randomised Savings Pocket (RSP)</h3>
             <button
               onClick={handleRSMToggle}
               className={`relative inline-flex h-7 w-14 items-center rounded-full transition-all duration-300 ${
@@ -227,7 +227,7 @@ export default function AccountsPage() {
                   <div className="bg-[#0000FF] text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xs">
                     RSM
                   </div>
-                  <span className="text-gray-900 font-medium">RSM Account</span>
+                  <span className="text-gray-900 font-medium">RSP Account</span>
                 </div>
                 <span className="text-gray-900 font-semibold">RM {rsmBalance.toFixed(2)}</span>
               </div>
@@ -238,7 +238,7 @@ export default function AccountsPage() {
                 <div className="bg-gray-400 text-white rounded-full w-12 h-12 flex items-center justify-center font-bold text-xs">
                   RSM
                 </div>
-                <span className="text-gray-500 font-medium">RSM Account</span>
+                <span className="text-gray-500 font-medium">RSP Account</span>
               </div>
               <span className="text-gray-500 font-semibold">RM {rsmBalance.toFixed(2)}</span>
             </div>
@@ -315,16 +315,16 @@ export default function AccountsPage() {
       {showConfirmDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-8 max-w-md w-full mx-4 shadow-2xl">
-            <h3 className="text-2xl font-bold text-[#0000FF] mb-4">Disable RSM Account?</h3>
+            <h3 className="text-2xl font-bold text-[#0000FF] mb-4">Disable RSP Account?</h3>
             <p className="text-gray-700 mb-2">
-              Are you sure you want to disable your RSM Account?
+              Are you sure you want to disable your RSP Account?
             </p>
             <div className="bg-blue-50 border-l-4 border-[#0000FF] p-4 rounded mb-6">
               <p className="text-sm text-gray-700">
                 <strong>RM {rsmBalance.toFixed(2)}</strong> will be automatically transferred to your Main Account.
               </p>
               <p className="text-sm text-gray-700 mt-2">
-                Your RSM Account will be reset to <strong>RM 0.00</strong> and disabled.
+                Your RSP Account will be reset to <strong>RM 0.00</strong> and disabled.
               </p>
             </div>
             <div className="flex gap-4 justify-end">

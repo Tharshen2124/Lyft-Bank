@@ -310,7 +310,7 @@ export default function RSMSettingsPage() {
             </button>
           </Link>
           <h2 className="text-4xl font-bold text-[#0000FF]" style={{ fontFamily: "Times New Roman, serif" }}>
-            RSM Account Settings
+            RSP Account Settings
           </h2>
         </div>
 
